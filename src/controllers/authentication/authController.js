@@ -13,7 +13,7 @@ const login = (req, res, next) => {
     return apiInternalServerError(res, "JWT_SECRET is not set");
   }
 
-  passport.authenticate("local", (err, user) => {
+  passport.authenticate("local", { session: false }, (err, user) => {
     try {
       if (err) {
         console.error("Login error:", err);

@@ -44,10 +44,11 @@ const validate = (data) => {
       res,
       "Validation failed",
       errors.array().reduce((result, error) => {
-        if (!result[error.path]) {
-          result[error.path] = [];
+        const field = error.path || error.param || "form";
+        if (!result[field]) {
+          result[field] = [];
         }
-        result[error.path].push(error.msg);
+        result[field].push(error.msg);
         return result;
       }, {})
     );

@@ -5,6 +5,9 @@ const authController = require("../controllers/authentication/authController");
 const inviteController = require("../controllers/admin/inviteController");
 
 const admin = (router) => {
+  router.get("/login", (req, res) => {
+    res.json({ status: true, message: "login endpoint reachable" });
+  });
   router.post("/login", validation("login"), authController.login);
   router.use(passport.authenticate("jwt", { session: false }));
   router.post("/logout", authController.logout);

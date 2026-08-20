@@ -4,7 +4,7 @@ const passportJWT = require("passport-jwt");
 const ExtractJwt = passportJWT.ExtractJwt;
 const JwtStrategy = passportJWT.Strategy;
 const session = require("express-session");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const User = require("../models/user");
 const { toAuthUser } = require("./authToken");
@@ -41,21 +41,21 @@ const localPassport = (app) => {
         }
 
         User.findOne(query)
-          .then((res) => {
-            if (!res || !res.password) {
+          .then((user) => {
+            if (!user || !user.password) {
               return done(null, false);
             }
 
-            bcrypt.compare(password, res.password, (error, response) => {
+            bcrypt.compare(password, user.password, (error, matched) => {
               if (error) {
                 return done(error);
               }
 
-              if (!response) {
+              if (!matched) {
                 return done(null, false);
               }
 
-              return done(null, toAuthUser(res));
+              return done(null, toAuthUser(user));
             });
           })
           .catch((err) => {
