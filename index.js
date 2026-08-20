@@ -7,6 +7,14 @@ const { Server } = require("socket.io");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const { allowedOrigins, corsOptions } = require("./src/helpers/cors");
+const mongoose = require("mongoose");
+
+const healthPayload = () => ({
+  status: true,
+  message: "Chat API",
+  database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  jwt: Boolean(process.env.JWT_SECRET),
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -34,7 +42,11 @@ require("./src/socket")(io);
 require("./src/routes/api")(express, app);
 
 app.get("/", (req, res) => {
-  res.send("Chat API");
+  res.json(healthPayload());
+});
+
+app.get("/health", (req, res) => {
+  res.json(healthPayload());
 });
 
 const port = Number(process.env.PORT) || 3000;
