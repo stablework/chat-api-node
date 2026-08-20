@@ -1,0 +1,46 @@
+name: deploy docker image to ec2 aws
+
+on:
+  pull_request:
+    branches: 
+      - main
+    types:
+      - closed
+
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+    
+        steps:
+            - uses: actions/checkout@v2
+            
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: us-east-1
+    
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+    
+            - name: Build, tag, and push image to Amazon ECR
+              id: build-image
+              env:
+                ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                ECR_REPOSITORY: freedomconex-backend
+                IMAGE_TAG: Lasted
+              run: |
+                echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+                echo "image-url=$ECR_REGISTRY/$ECR_REPOSITORY" >> $GITHUB_OUTPUT
+                docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+            - name: CodeDeploy runs
+              run: |
+                commit_hash=`git rev-parse HEAD`
+                aws deploy create-deployment --application-name ${{ secrets.DEPLOY_APPLICATION }} --deployment-group-name ${{ secrets.DEPLOY_GROUP }} --github-location repository=$GITHUB_REPOSITORY,commitId=$commit_hash --ignore-application-stop-failures
+         
+                

@@ -1,0 +1,18 @@
+version: 0.0
+os: linux
+files:
+  - source: /CICD
+    destination: /home/ec2-user/CICD
+permissions:
+  - object: /home/ec2-user/app
+    owner: ec2-user
+    group: ec2-user
+hooks:
+  AfterInstall:
+    - location: CICD/codedeploy-scripts/set-permissions.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: CICD/codedeploy-scripts/start_server.sh
+      timeout: 300
+      runas: root
