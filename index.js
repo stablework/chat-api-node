@@ -5,19 +5,24 @@ const bodyParser = require("body-parser");
 const { Server } = require("socket.io");
 require("dotenv").config();
 
+const { allowedOrigins, corsOptions } = require("./src/helpers/cors");
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || true,
+    origin: allowedOrigins,
     credentials: true,
+    methods: corsOptions.methods,
   },
 });
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 require("./src/database/database")();
 require("./src/helpers/passport")(app);
 
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -35,4 +40,5 @@ app.get("/", (req, res) => {
 const port = process.env.PORT;
 server.listen(port, () => {
   console.log(`Chat API listening on port ${port}`);
+  console.log(`CORS origins: ${allowedOrigins.join(", ")}`);
 });
