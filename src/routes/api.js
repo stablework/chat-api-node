@@ -1,4 +1,14 @@
+const mongoose = require("mongoose");
+
 const api = (express, app) => {
+  app.get("/api/health", (req, res) => {
+    res.json({
+      status: true,
+      database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+      jwt: Boolean(process.env.JWT_SECRET),
+    });
+  });
+
   const adminRoutes = require("./admin")(express.Router());
   app.use("/api/admin", adminRoutes);
 

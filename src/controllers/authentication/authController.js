@@ -1,27 +1,39 @@
+const mongoose = require("mongoose");
 const passport = require("passport");
 const { apiInternalServerError } = require("../../exceptions/apiErrors");
 const { _success, _error, _unauthorized } = require("../../helpers/common");
 const { signToken } = require("../../helpers/authToken");
 
-const login = async (req, res, next) => {
-  try {
-    passport.authenticate("local", (err, user) => {
-      if (err || !user) {
-        return _unauthorized(res, "Invalid Credentials");
-      }
-
-      if (!["admin", "guest"].includes(user.role)) {
-        return _unauthorized(res, "Invalid Credentials");
-      }
-
-      if (user.status == "active") {
-        return _success(res, "Login successful", { token: signToken(user) });
-      }
-      return _success(res, "Account is inactive", {}, false);
-    })(req, res, next);
-  } catch (err) {
-    return apiInternalServerError(res, err.message);
+const login = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return apiInternalServerError(res, "Database not connected");
   }
+
+  if (!process.env.JWT_SECRET) {
+    return apiInternalServerError(res, "JWT_SECRET is not set");
+  }
+
+  passport.authenticate("local", (err, user) => {
+    try {
+      if (err) {
+        console.error("Login error:", err);
+        return apiInternalServerError(res, err.message || "Login failed");
+      }
+
+      if (!user || !["admin", "guest"].includes(user.role)) {
+        return _unauthorized(res, "Invalid Credentials");
+      }
+
+      if (user.status !== "active") {
+        return _success(res, "Account is inactive", {}, false);
+      }
+
+      return _success(res, "Login successful", { token: signToken(user) });
+    } catch (error) {
+      console.error("Login error:", error);
+      return apiInternalServerError(res, error.message);
+    }
+  })(req, res, next);
 };
 
 const logout = (req, res) => {

@@ -1,14 +1,17 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const database = async () => {
-    try {
-        await mongoose.connect(process.env.DATABASE)
-        .then(() => console.log('Connected!'))
-        .catch(err => console.log(err));
-    } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
-        process.exit(1); 
-    }
+  if (!process.env.DATABASE) {
+    console.error("DATABASE is not set");
+    return;
+  }
+
+  try {
+    await mongoose.connect(process.env.DATABASE);
+    console.log("Connected!");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+  }
 };
 
 module.exports = database;

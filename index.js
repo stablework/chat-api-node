@@ -1,9 +1,10 @@
+const path = require("path");
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Server } = require("socket.io");
-require("dotenv").config();
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const { allowedOrigins, corsOptions } = require("./src/helpers/cors");
 
