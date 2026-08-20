@@ -18,7 +18,6 @@ const io = new Server(server, {
 });
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 require("./src/database/database")();
 require("./src/helpers/passport")(app);
@@ -37,8 +36,8 @@ app.get("/", (req, res) => {
   res.send("Chat API");
 });
 
-const port = process.env.PORT;
-server.listen(port, () => {
-  console.log(`Chat API listening on port ${port}`);
+const port = Number(process.env.PORT) || 3000;
+server.listen(port, "127.0.0.1", () => {
+  console.log(`Chat API listening on 127.0.0.1:${port}`);
   console.log(`CORS origins: ${allowedOrigins.join(", ")}`);
 });
