@@ -9,6 +9,8 @@ const { signToken } = require("../../helpers/authToken");
 const Invite = require("../../models/invites");
 const User = require("../../models/user");
 const Channel = require("../../models/channels");
+const Chat = require("../../models/chats");
+const { toPublicChannel, toPublicMessage } = require("../../helpers/socketPayload");
 
 const isInviteActive = (invite) => {
   if (!invite) return false;
@@ -115,15 +117,34 @@ const join = async (req, res) => {
       }
     }
 
+    const io = req.app.get("io");
+    let lastMessage = null;
     if (created) {
-      const io = req.app.get("io");
-      io?.to("admins").emit("channel:created", {
-        ...channel.toObject(),
-        guest: {
-          _id: guest._id,
-          name: guest.name,
-        },
+      const joinChat = await Chat.create({
+        body: `${guest.name} joined the chat`,
+        sender_id: guest._id,
+        channel_id: channel._id,
+        kind: "system",
       });
+      const populated = await Chat.findById(joinChat._id)
+        .populate("sender_id", "name role")
+        .exec();
+      lastMessage = toPublicMessage(populated);
+      channel.updated_at = new Date();
+      await channel.save();
+      io?.to(`channel:${channel._id}`).emit("message:created", lastMessage);
+    }
+
+    if (io) {
+      const payload = toPublicChannel(channel, guest, {
+        unread_count: created ? 1 : 0,
+        last_message: lastMessage,
+      });
+      let broadcast = io.to("admins");
+      if (channel.created_by) {
+        broadcast = broadcast.to(`user:${String(channel.created_by)}`);
+      }
+      broadcast.emit("channel:created", payload);
     }
 
     const token = signToken(guest);

@@ -8,17 +8,24 @@ const {
 const Chat = require("../../models/chats");
 const Channel = require("../../models/channels");
 const { getAccessibleChannel } = require("../../helpers/channelAccess");
+const { toPublicMessage } = require("../../helpers/socketPayload");
 
 const emitMessage = (req, channel, event, payload) => {
   const io = req.app.get("io");
   if (!io || !channel) return;
-  io.to(`channel:${channel._id}`).emit(event, payload);
-  (channel.users || []).forEach((userId) => {
-    io.to(`user:${userId}`).emit("channel:updated", {
-      channel_id: channel._id,
-      last_message: payload,
-    });
+  const channelId = String(channel._id);
+  const publicPayload = payload && payload._id ? toPublicMessage(payload) : payload;
+  io.to(`channel:${channelId}`).emit(event, publicPayload);
+  io.to("admins").emit("channel:updated", {
+    channel_id: channelId,
+    last_message: publicPayload,
   });
+  if (channel.guest_id) {
+    io.to(`user:${String(channel.guest_id)}`).emit("channel:updated", {
+      channel_id: channelId,
+      last_message: publicPayload,
+    });
+  }
 };
 
 const create = async (req, res) => {
@@ -78,6 +85,7 @@ const list = async (req, res) => {
 };
 
 const canMutate = (chat, user) => {
+  if (chat.kind === "system") return false;
   if (user.role === "admin") return true;
   return String(chat.sender_id) === String(user._id);
 };

@@ -27,6 +27,7 @@ const chatSchema = new mongoose.Schema(
       },
     ],
     files: { type: [String], required: false, default: [] },
+    kind: { type: String, enum: ["message", "system"], default: "message" },
     deleted_at: { type: Date, default: null, index: 1 },
   },
   {
