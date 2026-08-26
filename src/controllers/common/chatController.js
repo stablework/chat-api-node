@@ -31,7 +31,9 @@ const emitMessage = (req, channel, event, payload) => {
 const create = async (req, res) => {
   try {
     const { body, parent_chat_id } = req.body;
-    const files = req.files ? req.files.map((file) => file.path) : [];
+    const files = req.files
+      ? req.files.map((file) => `storage/chat/files/${file.filename}`)
+      : [];
     const text = typeof body === "string" ? body.trim() : "";
 
     if (!text && files.length === 0) {

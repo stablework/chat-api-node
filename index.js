@@ -50,7 +50,12 @@ require("./src/helpers/passport")(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+const { chatFilesDir } = require("./src/helpers/storagePaths");
 const storageDir = path.join(__dirname, "storage");
+const chatFileStatic = express.static(chatFilesDir, { fallthrough: false, index: false });
+app.use("/app/chat/files", chatFileStatic);
+app.use("/api/chat/files", chatFileStatic);
+app.use("/chat/files", chatFileStatic);
 app.use(express.static(storageDir));
 app.use("/app", express.static(storageDir));
 app.use("/assets", express.static("src/assets"));

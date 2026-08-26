@@ -1,10 +1,12 @@
 const passport = require("passport");
 const fileUpload = require("../helpers/fileUpload");
 const { _filesData } = require("../helpers/common");
+const serveChatFile = require("../helpers/serveChatFile");
 const chatController = require("../controllers/common/chatController");
 const authController = require("../controllers/authentication/authController");
 
 const chat = (router) => {
+  router.get("/files/:filename", serveChatFile);
   router.use(passport.authenticate("jwt", { session: false }));
   router.post("/logout", authController.logout);
 
