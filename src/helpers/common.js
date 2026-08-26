@@ -1,8 +1,17 @@
 
 const moment = require('moment')
+const { isLocalHost, requestBase } = require("./requestContext");
 
 const _basePath = () => {
-    return process.env.BASE_PATH
+    const env = String(process.env.BASE_PATH || "").replace(/\/$/, "");
+    if (env && !isLocalHost(env)) return env;
+    const fromRequest = String(requestBase() || "").replace(/\/$/, "");
+    if (fromRequest && !isLocalHost(fromRequest)) return fromRequest;
+    return env || "http://localhost:3000";
+}
+
+const filePublicBase = () => {
+    return `${_basePath().replace(/\/app$/, "")}/app`;
 }
 
 const _success = (res, message='', result=[], status=true) => {
@@ -34,9 +43,20 @@ const _filesData = (data) => {
 
 const toPublicFileUrl = (filePath) => {
     if (!filePath) return filePath;
-    if (String(filePath).startsWith('http')) return filePath;
-    const relative = String(filePath).replace(/^storage\//, '').replace(/^\//, '');
-    return `${_basePath()}/${relative}`;
+    let value = String(filePath);
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value)) {
+        value = value.replace(/^https?:\/\/[^/]+/i, "");
+    }
+    if (value.startsWith("http")) {
+        try {
+            const url = new URL(value);
+            value = url.pathname;
+        } catch {
+            return value;
+        }
+    }
+    const relative = value.replace(/^storage\//, "").replace(/^\/?app\//, "").replace(/^\//, "");
+    return `${filePublicBase()}/${relative}`;
 }
 
 const inviteUrl = (token) => {

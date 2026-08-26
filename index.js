@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const { allowedOrigins, corsOptions } = require("./src/helpers/cors");
+const { withRequestBase } = require("./src/helpers/requestContext");
 const mongoose = require("mongoose");
 
 const healthPayload = () => ({
@@ -27,6 +28,7 @@ const io = new Server(server, {
 });
 
 app.use(cors(corsOptions));
+app.use(withRequestBase);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin) {
@@ -48,7 +50,9 @@ require("./src/helpers/passport")(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.static("storage"));
+const storageDir = path.join(__dirname, "storage");
+app.use(express.static(storageDir));
+app.use("/app", express.static(storageDir));
 app.use("/assets", express.static("src/assets"));
 
 app.set("io", io);
