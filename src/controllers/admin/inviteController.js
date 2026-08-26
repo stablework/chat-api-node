@@ -1,18 +1,7 @@
 const { _success, _moment, inviteUrl } = require("../../helpers/common");
 const { apiInternalServerError, apiNotFound, apiBadRequest } = require("../../exceptions/apiErrors");
-const { slugifyName } = require("../../helpers/slug");
+const { uniqueWorkspaceCode } = require("../../helpers/slug");
 const Invite = require("../../models/invites");
-
-const uniqueSlug = async (name) => {
-  const base = slugifyName(name);
-  let slug = base;
-  let n = 2;
-  while (await Invite.findOne({ token: slug }).exec()) {
-    slug = `${base}-${n}`;
-    n += 1;
-  }
-  return slug;
-};
 
 const toInviteResult = (invite) => ({
   ...invite.toObject(),
@@ -30,7 +19,7 @@ const create = async (req, res) => {
       return apiBadRequest(res, "Your name is required");
     }
 
-    const token = await uniqueSlug(guestName);
+    const token = await uniqueWorkspaceCode((code) => Invite.findOne({ token: code }).exec());
     const result = await Invite.create({
       token,
       guest_name: guestName,

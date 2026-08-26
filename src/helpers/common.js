@@ -41,7 +41,7 @@ const toPublicFileUrl = (filePath) => {
 
 const inviteUrl = (token) => {
     const clientUrl = (process.env.CLIENT_URL || '').replace(/\/$/, '');
-    return `${clientUrl}/discussion/${token}`;
+    return `${clientUrl}/workspace/${token}`;
 }
 
 module.exports = { 

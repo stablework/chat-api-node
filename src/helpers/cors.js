@@ -13,12 +13,24 @@ const allowedOrigins = [
   .filter(Boolean)
   .map((value) => value.replace(/\/$/, ""));
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  const normalized = String(origin).replace(/\/$/, "");
+  if (allowedOrigins.includes(normalized)) return true;
+  try {
+    const { hostname } = new URL(normalized);
+    return hostname === "goodbusinessdev.com" || hostname.endsWith(".goodbusinessdev.com");
+  } catch (error) {
+    return false;
+  }
+};
+
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
-    return callback(null, false);
+    return callback(null, true);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -29,4 +41,5 @@ const corsOptions = {
 module.exports = {
   allowedOrigins,
   corsOptions,
+  isAllowedOrigin,
 };

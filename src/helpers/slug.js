@@ -1,13 +1,14 @@
-const slugifyName = (name) => {
-  const base = String(name || "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
+const crypto = require("crypto");
 
-  return base || "guest";
+const uniqueWorkspaceCode = async (exists) => {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const suffix = crypto.randomInt(0, 10000).toString().padStart(4, "0");
+    const token = `FVR-${suffix}`;
+    if (!(await exists(token))) {
+      return token;
+    }
+  }
+  throw new Error("Could not allocate a workspace code");
 };
 
-module.exports = { slugifyName };
+module.exports = { uniqueWorkspaceCode };
